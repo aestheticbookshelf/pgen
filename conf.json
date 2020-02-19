@@ -7,6 +7,7 @@
     },
     "packages": {
         "confutils": {
+            "skipGit": true,
             "description": "Configuration utils.",
             "keywords": [
                 "configuration",

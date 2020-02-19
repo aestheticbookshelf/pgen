@@ -78,10 +78,12 @@ jsonfile.readFile('conf.json').then(obj => {
     fs.writeFileSync(path.join(root, "config"), createConfig(props))
     console.log("removing git")
     rimraf.sync(path.join(root, ".git"))
-    console.log("initializing git")
-    execSync('git init', {
-        cwd: root
-    })
+    if(!props.skipGitInit){
+        console.log("initializing git")
+        execSync('git init', {
+            cwd: root
+        })
+    }    
     console.log("writing config")
     fs.copyFileSync(path.join(root, "config"), path.join(root, ".git/config"))    
     console.log("writing package.json")
@@ -95,6 +97,7 @@ jsonfile.readFile('conf.json').then(obj => {
     fs.copyFileSync(path.join(sRootSrc, "init.bat"), path.join(sRoot, "init.bat"))    
     fs.copyFileSync(path.join(sRootSrc, "c.bat"), path.join(sRoot, "c.bat"))    
     fs.copyFileSync(path.join(sRootSrc, "p.bat"), path.join(sRoot, "p.bat"))   
+    fs.copyFileSync(path.join(sRootSrc, "publish.bat"), path.join(sRoot, "publish.bat"))   
     console.log("creating src")    
     if(props.srcDir != ".") try{fs.mkdirSync(path.join(root, props.srcDir));console.log("created", props.srcDir)}catch(err){console.log(props.srcDir, "already exists")}    
     fs.writeFileSync(path.join(root, props.mainPath), "")
