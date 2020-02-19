@@ -1,0 +1,19 @@
+{
+    "make": "confutils",
+    "common": {
+        "gitHubUser": "aestheticbookshelf",
+        "gitHubUserMail": "aestheticbookshelf@gmail.com",
+        "npmUser": "aestheticbookshelf",
+        "license": "MIT",
+        "rootDirRel": "../"        
+    },
+    "packages": {
+        "confutils": {
+            "description": "Configuration utils.",
+            "keywords": [
+                "configuration",
+                "utils"
+            ]
+        }
+    }
+}
