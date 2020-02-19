@@ -3,9 +3,7 @@
     "common": {
         "gitHubUser": "aestheticbookshelf",
         "gitHubUserMail": "aestheticbookshelf@gmail.com",
-        "npmUser": "aestheticbookshelf",
-        "license": "MIT",
-        "rootDirRel": "../"        
+        "npmUser": "aestheticbookshelf"
     },
     "packages": {
         "confutils": {
