@@ -52,6 +52,15 @@ function createPackageJson(props){
     return pkgJson
 }
 
+function createReadMe(props){
+    let ReadMe = `# ${props.repo}
+
+${props.description}
+`
+
+    return ReadMe
+}
+
 jsonfile.readFile('conf.json').then(obj => {
     let make = obj.make
     let root = path.join(__dirname, obj.common.rootDirRel || "../", make)
@@ -89,4 +98,6 @@ jsonfile.readFile('conf.json').then(obj => {
     console.log("creating src")    
     if(props.srcDir != ".") try{fs.mkdirSync(path.join(root, props.srcDir));console.log("created", props.srcDir)}catch(err){console.log(props.srcDir, "already exists")}    
     fs.writeFileSync(path.join(root, props.mainPath), "")
+    console.log("writing ReadMe")    
+    fs.writeFileSync(path.join(root, "ReadMe.md"), createReadMe(props))
 })
