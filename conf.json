@@ -1,16 +1,22 @@
 {
-    "make": "confutils",
+    "make": "fileutils",
     "common": {
         "gitHubUser": "aestheticbookshelf",
         "gitHubUserMail": "aestheticbookshelf@gmail.com",
         "npmUser": "aestheticbookshelf"
     },
     "packages": {
-        "confutils": {
-            "skipGit": true,
+        "confutils": {            
             "description": "Configuration utils.",
             "keywords": [
                 "configuration",
+                "utils"
+            ]
+        },
+        "fileutils": {            
+            "description": "File utils.",
+            "keywords": [
+                "file",
                 "utils"
             ]
         }

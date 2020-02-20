@@ -22,6 +22,7 @@
     "url": "https://github.com/aestheticbookshelf/pgen.git"
   },
   "dependencies": {
+    "@octokit/rest": "^16.43.1",
     "jsonfile": "^5.0.0",
     "rimraf": "^3.0.2"
   }

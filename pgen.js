@@ -3,8 +3,12 @@ const jsonfile = require('jsonfile')
 const fs = require('fs')
 const rimraf = require('rimraf')
 const { execSync } = require('child_process')
+const Octokit = require("@octokit/rest")
 
-console.log()
+const octokit = Octokit({
+    auth: process.env.GITHUB_TOKEN,
+    userAgent: "Pgen"
+})
 
 function createConfig(props){
     let config = `[core]
@@ -75,32 +79,40 @@ jsonfile.readFile('conf.json').then(obj => {
     console.log("writing .gitignore")
     fs.writeFileSync(path.join(root, ".gitignore"), `\nnode_modules\n`)
     console.log("writing config")
-    fs.writeFileSync(path.join(root, "config"), createConfig(props))
+    fs.writeFileSync(path.join(root, "config"), createConfig(props))       
     console.log("removing git")
     rimraf.sync(path.join(root, ".git"))
-    if(!props.skipGitInit){
+    octokit.repos.delete({
+        owner: props.gitHubUser,
+        repo: props.repo
+    }).then(result => console.log("repo removed"), err => console.log(err))
+    setTimeout(() => {
         console.log("initializing git")
+        octokit.repos.createForAuthenticatedUser({
+            name: props.repo,
+            description: props.description
+        }).then(result => console.log("repo created"), err => console.log(err))
         execSync('git init', {
             cwd: root
         })
-    }    
-    console.log("writing config")
-    fs.copyFileSync(path.join(root, "config"), path.join(root, ".git/config"))    
-    console.log("writing package.json")
-    fs.writeFileSync(path.join(root, "package.json"), JSON.stringify(createPackageJson(props), null, 2))
-    console.log("writing LICENSE")
-    fs.copyFileSync(path.join(__dirname, "LICENSE"), path.join(root, "LICENSE"))    
-    let sRootSrc = path.join(__dirname, "s")
-    let sRoot = path.join(root, "s")
-    console.log("writing scripts")
-    try{fs.mkdirSync(sRoot);console.log("created", sRoot)}catch(err){console.log(sRoot, "already exists")}    
-    fs.copyFileSync(path.join(sRootSrc, "init.bat"), path.join(sRoot, "init.bat"))    
-    fs.copyFileSync(path.join(sRootSrc, "c.bat"), path.join(sRoot, "c.bat"))    
-    fs.copyFileSync(path.join(sRootSrc, "p.bat"), path.join(sRoot, "p.bat"))   
-    fs.copyFileSync(path.join(sRootSrc, "publish.bat"), path.join(sRoot, "publish.bat"))   
-    console.log("creating src")    
-    if(props.srcDir != ".") try{fs.mkdirSync(path.join(root, props.srcDir));console.log("created", props.srcDir)}catch(err){console.log(props.srcDir, "already exists")}    
-    fs.writeFileSync(path.join(root, props.mainPath), "")
-    console.log("writing ReadMe")    
-    fs.writeFileSync(path.join(root, "ReadMe.md"), createReadMe(props))
+        console.log("writing config")
+        fs.copyFileSync(path.join(root, "config"), path.join(root, ".git/config"))    
+        console.log("writing package.json")
+        fs.writeFileSync(path.join(root, "package.json"), JSON.stringify(createPackageJson(props), null, 2))
+        console.log("writing LICENSE")
+        fs.copyFileSync(path.join(__dirname, "LICENSE"), path.join(root, "LICENSE"))    
+        let sRootSrc = path.join(__dirname, "s")
+        let sRoot = path.join(root, "s")
+        console.log("writing scripts")
+        try{fs.mkdirSync(sRoot);console.log("created", sRoot)}catch(err){console.log(sRoot, "already exists")}    
+        fs.copyFileSync(path.join(sRootSrc, "init.bat"), path.join(sRoot, "init.bat"))    
+        fs.copyFileSync(path.join(sRootSrc, "c.bat"), path.join(sRoot, "c.bat"))    
+        fs.copyFileSync(path.join(sRootSrc, "p.bat"), path.join(sRoot, "p.bat"))   
+        fs.copyFileSync(path.join(sRootSrc, "publish.bat"), path.join(sRoot, "publish.bat"))   
+        console.log("creating src")    
+        if(props.srcDir != ".") try{fs.mkdirSync(path.join(root, props.srcDir));console.log("created", props.srcDir)}catch(err){console.log(props.srcDir, "already exists")}    
+        fs.writeFileSync(path.join(root, props.mainPath), "")
+        console.log("writing ReadMe")    
+        fs.writeFileSync(path.join(root, "ReadMe.md"), createReadMe(props))
+    }, 5000)    
 })
