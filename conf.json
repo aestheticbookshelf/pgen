@@ -1,5 +1,5 @@
 {
-    "make": "fileutils",
+    "make": "confutils",
     "common": {
         "gitHubUser": "aestheticbookshelf",
         "gitHubUserMail": "aestheticbookshelf@gmail.com",

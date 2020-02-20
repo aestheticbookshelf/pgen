@@ -1,9 +1,8 @@
 const path = require('path')
-const jsonfile = require('jsonfile')
 const fs = require('fs')
-const rimraf = require('rimraf')
+const fu = require('@aestheticbookshelf/fileutils')
 const { execSync } = require('child_process')
-const Octokit = require("@octokit/rest")
+const { Octokit } = require("@octokit/rest")
 
 const octokit = Octokit({
     auth: process.env.GITHUB_TOKEN,
@@ -65,54 +64,66 @@ ${props.description}
     return ReadMe
 }
 
-jsonfile.readFile('conf.json').then(obj => {
+function getProps(){
+    let obj = fu.readJson('conf.json')
+
     let make = obj.make
-    let root = path.join(__dirname, obj.common.rootDirRel || "../", make)
-    console.log("making", make)    
-    try{fs.mkdirSync(root);console.log("created", root)}catch(err){console.log(root, "already exists")}
+    let root = path.join(__dirname, obj.common.rootDirRel || "../", make)    
     let props = {...obj.common, ...obj.packages[make]}
     props.repo = make
     props.main = props.main || `${props.repo}.js`
-    props.srcDir = props.srcDir || "src"
-    props.mainPath = `${props.srcDir}/${props.main}`
+    props.libDir = props.libDir || "lib"
+    props.mainPath = `${props.libDir}/${props.main}`
+    props.root = root
 
+    return props
+}
+
+function pgen(){
+    let props = getProps()    
+    console.log("making", props.repo)        
+    console.log("initializing repo folder")
+    let root = props.root
+    fu.removeDir(root)
+    fu.createDir(root)
     console.log("writing .gitignore")
-    fs.writeFileSync(path.join(root, ".gitignore"), `\nnode_modules\n`)
+    fu.writeFile(path.join(root, ".gitignore"), `\nnode_modules\n`)
     console.log("writing config")
-    fs.writeFileSync(path.join(root, "config"), createConfig(props))       
-    console.log("removing git")
-    rimraf.sync(path.join(root, ".git"))
+    fu.writeFile(path.join(root, "config"), createConfig(props))       
+    console.log("removing git")    
     octokit.repos.delete({
         owner: props.gitHubUser,
         repo: props.repo
-    }).then(result => console.log("repo removed"), err => console.log(err))
-    setTimeout(() => {
+    }).then(_ => {        
         console.log("initializing git")
         octokit.repos.createForAuthenticatedUser({
             name: props.repo,
             description: props.description
-        }).then(result => console.log("repo created"), err => console.log(err))
-        execSync('git init', {
-            cwd: root
-        })
-        console.log("writing config")
-        fs.copyFileSync(path.join(root, "config"), path.join(root, ".git/config"))    
-        console.log("writing package.json")
-        fs.writeFileSync(path.join(root, "package.json"), JSON.stringify(createPackageJson(props), null, 2))
-        console.log("writing LICENSE")
-        fs.copyFileSync(path.join(__dirname, "LICENSE"), path.join(root, "LICENSE"))    
-        let sRootSrc = path.join(__dirname, "s")
-        let sRoot = path.join(root, "s")
-        console.log("writing scripts")
-        try{fs.mkdirSync(sRoot);console.log("created", sRoot)}catch(err){console.log(sRoot, "already exists")}    
-        fs.copyFileSync(path.join(sRootSrc, "init.bat"), path.join(sRoot, "init.bat"))    
-        fs.copyFileSync(path.join(sRootSrc, "c.bat"), path.join(sRoot, "c.bat"))    
-        fs.copyFileSync(path.join(sRootSrc, "p.bat"), path.join(sRoot, "p.bat"))   
-        fs.copyFileSync(path.join(sRootSrc, "publish.bat"), path.join(sRoot, "publish.bat"))   
-        console.log("creating src")    
-        if(props.srcDir != ".") try{fs.mkdirSync(path.join(root, props.srcDir));console.log("created", props.srcDir)}catch(err){console.log(props.srcDir, "already exists")}    
-        fs.writeFileSync(path.join(root, props.mainPath), "")
-        console.log("writing ReadMe")    
-        fs.writeFileSync(path.join(root, "ReadMe.md"), createReadMe(props))
-    }, 5000)    
-})
+        }).then(_ => {
+            execSync('git init', {
+                cwd: root
+            })
+            console.log("writing config")
+            fs.copyFileSync(path.join(root, "config"), path.join(root, ".git/config"))    
+            console.log("writing package.json")
+            fu.writeFile(path.join(root, "package.json"), JSON.stringify(createPackageJson(props), null, 2))
+            console.log("writing LICENSE")
+            fs.copyFileSync(path.join(__dirname, "LICENSE"), path.join(root, "LICENSE"))    
+            let sRootSrc = path.join(__dirname, "s")
+            let sRoot = path.join(root, "s")
+            console.log("writing scripts")
+            fu.createDir(sRoot)
+            fs.copyFileSync(path.join(sRootSrc, "init.bat"), path.join(sRoot, "init.bat"))    
+            fs.copyFileSync(path.join(sRootSrc, "c.bat"), path.join(sRoot, "c.bat"))    
+            fs.copyFileSync(path.join(sRootSrc, "p.bat"), path.join(sRoot, "p.bat"))   
+            fs.copyFileSync(path.join(sRootSrc, "publish.bat"), path.join(sRoot, "publish.bat"))   
+            console.log("creating lib")    
+            if(props.libDir != ".") fu.createDir(path.join(root, props.libDir))
+            fu.writeFile(path.join(root, props.mainPath), "")
+            console.log("writing ReadMe")    
+            fu.writeFile(path.join(root, "ReadMe.md"), createReadMe(props))
+        }, err => console.log(err))        
+    }, err => console.log(err))
+}
+
+pgen()
