@@ -94,6 +94,29 @@ function getProps(){
     return props
 }
 
+function createGitignore(props){
+    let gitignore = `
+node_modules
+`
+
+    if(props.firebase) gitignore += `
+/env/*
+!/env/ReadMe.md    
+`
+
+    return gitignore
+}
+
+function createInstallBat(props){    
+    let ib = fu.readFile(path.join(__dirname, "s/install.bat"))
+
+    if(props.firebase){
+        ib += "\n\ncall npm install @aestheticbookshelf/confutils\n"
+    }
+
+    return ib
+}
+
 function pgen(){
     let props = getProps()    
     console.log("making", props.repo)        
@@ -102,7 +125,12 @@ function pgen(){
     fu.removeDir(root)
     fu.createDir(root)
     console.log("writing .gitignore")
-    fu.writeFile(path.join(root, ".gitignore"), `\nnode_modules\n`)
+    fu.writeFile(path.join(root, ".gitignore"), createGitignore(props))
+    if(props.firebase){
+        fu.createDir(path.join(root, "env"))
+        fu.writeFile(path.join(root, "env/ReadMe.md"), "env")
+        fs.copyFileSync(path.join(__dirname, "initenv.js"), path.join(root, "initenv.js"))    
+    }
     console.log("writing config")
     fu.writeFile(path.join(root, "config"), createConfig(props))       
     console.log("removing git");        
@@ -132,9 +160,10 @@ function pgen(){
             if(props.app) fs.copyFileSync(path.join(sRootSrc, "ph.bat"), path.join(sRoot, "p.bat"))   
             else fs.copyFileSync(path.join(sRootSrc, "p.bat"), path.join(sRoot, "p.bat"))   
             if(props.app){
-                fs.copyFileSync(path.join(sRootSrc, "s.bat"), path.join(sRoot, "s.bat"))    
+                if(props.firebase) fs.copyFileSync(path.join(sRootSrc, "sfb.bat"), path.join(sRoot, "s.bat"))    
+                else fs.copyFileSync(path.join(sRootSrc, "s.bat"), path.join(sRoot, "s.bat"))    
                 fs.copyFileSync(path.join(sRootSrc, "dev.bat"), path.join(sRoot, "dev.bat"))   
-                fs.copyFileSync(path.join(sRootSrc, "install.bat"), path.join(sRoot, "install.bat"))   
+                fu.writeFile(path.join(sRoot, "install.bat"), createInstallBat(props))   
             }
             if(!props.app){
                 fs.copyFileSync(path.join(sRootSrc, "publish.bat"), path.join(sRoot, "publish.bat"))   
