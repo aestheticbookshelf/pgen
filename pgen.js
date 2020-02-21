@@ -4,7 +4,7 @@ const fu = require('@aestheticbookshelf/fileutils')
 const { execSync } = require('child_process')
 const { Octokit } = require("@octokit/rest")
 
-const SKIP_GIT = true
+const SKIP_GIT = false
 
 const APP_COPY_FROM_ROOT = [
     ".babelrc",
