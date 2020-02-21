@@ -36,6 +36,12 @@ function createConfig(props){
 	[credential "https://github.com/${props.gitHubUser}/${props.repo}.git"]
 		username = ${props.gitHubUser}
 `
+
+    if(props.app) config += `[remote "heroku"]
+	url = https://git.heroku.com/${props.app}.git
+	fetch = +refs/heads/*:refs/remotes/heroku/*
+`
+
     return config
 }
 
@@ -123,7 +129,8 @@ function pgen(){
             fu.createDir(sRoot)
             fs.copyFileSync(path.join(sRootSrc, "init.bat"), path.join(sRoot, "init.bat"))    
             fs.copyFileSync(path.join(sRootSrc, "c.bat"), path.join(sRoot, "c.bat"))    
-            fs.copyFileSync(path.join(sRootSrc, "p.bat"), path.join(sRoot, "p.bat"))   
+            if(props.app) fs.copyFileSync(path.join(sRootSrc, "ph.bat"), path.join(sRoot, "p.bat"))   
+            else fs.copyFileSync(path.join(sRootSrc, "p.bat"), path.join(sRoot, "p.bat"))   
             if(props.app){
                 fs.copyFileSync(path.join(sRootSrc, "s.bat"), path.join(sRoot, "s.bat"))    
                 fs.copyFileSync(path.join(sRootSrc, "dev.bat"), path.join(sRoot, "dev.bat"))   
@@ -145,19 +152,21 @@ function pgen(){
                 }
                 console.log("copying resources")
                 fu.copyDir(path.join(__dirname, "resources"), path.join(root, "resources"))
-                const Heroku = require('heroku-client')
-                const heroku = new Heroku({ token: process.env.HEROKU_TOKEN })
-                console.log("deleting app")
-                heroku.delete('/apps/' + props.app).then(_ => {            
-                    console.log("creating app")
-                    heroku.post('/apps', {body: {
-                        name: props.app,
-                        region: "eu",
-                        stack: "heroku-18"
-                    }}).then(result => {
-                        console.log("created app", result)
+                if(!SKIP_GIT){
+                    const Heroku = require('heroku-client')
+                    const heroku = new Heroku({ token: process.env.HEROKU_TOKEN })
+                    console.log("deleting app")
+                    heroku.delete('/apps/' + props.app).then(_ => {            
+                        console.log("creating app")
+                        heroku.post('/apps', {body: {
+                            name: props.app,
+                            region: "eu",
+                            stack: "heroku-18"
+                        }}).then(result => {
+                            console.log("created app", result)
+                        })
                     })
-                })
+                }
             }
         }, err => console.log(err))        
     , err => console.log(err))
