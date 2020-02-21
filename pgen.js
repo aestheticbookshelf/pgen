@@ -117,6 +117,20 @@ function createInstallBat(props){
     return ib
 }
 
+function createServer(props){
+    let s = fu.readFile(path.join(__dirname, "resources/server/server.js"))
+
+    if(props.firebase) s = s.replace("// firebase slot", `
+const fa = cu.FirebaseAdmin({
+    envDir: path.join(__dirname, "env"),
+    storageBucket: "pgneditor-1ab96.appspot.com",
+    databaseURL: "https://pgneditor-1ab96.firebaseio.com/"
+})
+`)
+
+    return s
+}
+
 function pgen(){
     let props = getProps()    
     console.log("making", props.repo)        
@@ -181,6 +195,7 @@ function pgen(){
                 }
                 console.log("copying resources")
                 fu.copyDir(path.join(__dirname, "resources"), path.join(root, "resources"))
+                fu.writeFile(path.join(root, "resources/server/server.js"), createServer(props))
                 console.log("copying dist")
                 fu.copyDir(path.join(__dirname, "dist"), path.join(root, "dist"))
                 if(!SKIP_GIT){

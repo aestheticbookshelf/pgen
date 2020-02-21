@@ -9,6 +9,8 @@ const __rootdirname = path.join(__dirname, '../..')
 
 app.use(express.static(__rootdirname))
 
+// firebase slot
+
 app.get('/', (req, res) => res.send(`
 <!DOCTYPE html>
 <html lang="en">
