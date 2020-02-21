@@ -4,6 +4,15 @@ const fu = require('@aestheticbookshelf/fileutils')
 const { execSync } = require('child_process')
 const { Octokit } = require("@octokit/rest")
 
+const SKIP_GIT = true
+
+const APP_COPY_FROM_ROOT = [
+    ".babelrc",
+    "Procfile",
+    "startserver.sh",
+    "gulpfile.babel.js"
+]
+
 const octokit = Octokit({
     auth: process.env.GITHUB_TOKEN,
     userAgent: "Pgen"
@@ -90,16 +99,15 @@ function pgen(){
     fu.writeFile(path.join(root, ".gitignore"), `\nnode_modules\n`)
     console.log("writing config")
     fu.writeFile(path.join(root, "config"), createConfig(props))       
-    console.log("removing git")    
-    octokit.repos.delete({
+    console.log("removing git");        
+    (SKIP_GIT ? new Promise(r=>r()) : octokit.repos.delete({
         owner: props.gitHubUser,
         repo: props.repo
-    }).then(_ => {        
-        console.log("initializing git")
+    })).then(_ => (SKIP_GIT ? new Promise(r=>r()) :                 
         octokit.repos.createForAuthenticatedUser({
             name: props.repo,
             description: props.description
-        }).then(_ => {
+        })).then(_ => {            
             execSync('git init', {
                 cwd: root
             })
@@ -116,14 +124,43 @@ function pgen(){
             fs.copyFileSync(path.join(sRootSrc, "init.bat"), path.join(sRoot, "init.bat"))    
             fs.copyFileSync(path.join(sRootSrc, "c.bat"), path.join(sRoot, "c.bat"))    
             fs.copyFileSync(path.join(sRootSrc, "p.bat"), path.join(sRoot, "p.bat"))   
-            fs.copyFileSync(path.join(sRootSrc, "publish.bat"), path.join(sRoot, "publish.bat"))   
-            console.log("creating lib")    
-            if(props.libDir != ".") fu.createDir(path.join(root, props.libDir))
-            fu.writeFile(path.join(root, props.mainPath), "")
+            if(props.app){
+                fs.copyFileSync(path.join(sRootSrc, "s.bat"), path.join(sRoot, "s.bat"))    
+                fs.copyFileSync(path.join(sRootSrc, "dev.bat"), path.join(sRoot, "dev.bat"))   
+                fs.copyFileSync(path.join(sRootSrc, "install.bat"), path.join(sRoot, "install.bat"))   
+            }
+            if(!props.app){
+                fs.copyFileSync(path.join(sRootSrc, "publish.bat"), path.join(sRoot, "publish.bat"))   
+                console.log("creating lib")    
+                if(props.libDir != ".") fu.createDir(path.join(root, props.libDir))
+                fu.writeFile(path.join(root, props.mainPath), "")
+            }
             console.log("writing ReadMe")    
             fu.writeFile(path.join(root, "ReadMe.md"), createReadMe(props))
+            if(props.app){
+                console.log("creating app")
+                for(let name of APP_COPY_FROM_ROOT){
+                    console.log("copying", name)
+                    fs.copyFileSync(path.join(__dirname, name), path.join(root, name))   
+                }
+                console.log("copying resources")
+                fu.copyDir(path.join(__dirname, "resources"), path.join(root, "resources"))
+                const Heroku = require('heroku-client')
+                const heroku = new Heroku({ token: process.env.HEROKU_TOKEN })
+                console.log("deleting app")
+                heroku.delete('/apps/' + props.app).then(_ => {            
+                    console.log("creating app")
+                    heroku.post('/apps', {body: {
+                        name: props.app,
+                        region: "eu",
+                        stack: "heroku-18"
+                    }}).then(result => {
+                        console.log("created app", result)
+                    })
+                })
+            }
         }, err => console.log(err))        
-    }, err => console.log(err))
+    , err => console.log(err))
 }
 
 pgen()

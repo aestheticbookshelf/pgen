@@ -22,7 +22,8 @@
     "url": "https://github.com/aestheticbookshelf/pgen.git"
   },
   "dependencies": {
-    "@aestheticbookshelf/fileutils": "^1.0.2",
-    "@octokit/rest": "^16.43.1"
+    "@aestheticbookshelf/fileutils": "^1.0.3",
+    "@octokit/rest": "^16.43.1",
+    "heroku-client": "^3.1.0"
   }
 }
