@@ -121,8 +121,9 @@ function createServer(props){
     let s = fu.readFile(path.join(__dirname, "resources/server/server.js"))
 
     if(props.firebase) s = s.replace("// firebase slot", `
+const cu = require('@aestheticbookshelf/confutils')
 const fa = cu.FirebaseAdmin({
-    envDir: path.join(__dirname, "env"),
+    envDir: path.join(__rootdirname, "env"),
     storageBucket: "pgneditor-1ab96.appspot.com",
     databaseURL: "https://pgneditor-1ab96.firebaseio.com/"
 })
