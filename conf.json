@@ -1,5 +1,5 @@
 {
-    "make": "minapp",
+    "make": "testapp",
     "common": {
         "gitHubUser": "aestheticbookshelf",
         "gitHubUserMail": "aestheticbookshelf@gmail.com",
@@ -25,6 +25,14 @@
             "description": "Minimal application.",
             "keywords": [
                 "minimal",
+                "application"
+            ]
+        },
+        "testapp": {          
+            "app": "abtestapp123",
+            "description": "Test application.",
+            "keywords": [
+                "test",
                 "application"
             ]
         }

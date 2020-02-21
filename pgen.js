@@ -106,10 +106,10 @@ function pgen(){
     console.log("writing config")
     fu.writeFile(path.join(root, "config"), createConfig(props))       
     console.log("removing git");        
-    (SKIP_GIT ? new Promise(r=>r()) : octokit.repos.delete({
+    (SKIP_GIT ? new Promise(r=>r()) : new Promise(r => octokit.repos.delete({
         owner: props.gitHubUser,
         repo: props.repo
-    })).then(_ => (SKIP_GIT ? new Promise(r=>r()) :                 
+    }).then(_ => r(), _ => r())).then(_ => (SKIP_GIT ? new Promise(r=>r()) :                 
         octokit.repos.createForAuthenticatedUser({
             name: props.repo,
             description: props.description
@@ -152,24 +152,28 @@ function pgen(){
                 }
                 console.log("copying resources")
                 fu.copyDir(path.join(__dirname, "resources"), path.join(root, "resources"))
+                console.log("copying dist")
+                fu.copyDir(path.join(__dirname, "dist"), path.join(root, "dist"))
                 if(!SKIP_GIT){
                     const Heroku = require('heroku-client')
                     const heroku = new Heroku({ token: process.env.HEROKU_TOKEN })
-                    console.log("deleting app")
-                    heroku.delete('/apps/' + props.app).then(_ => {            
-                        console.log("creating app")
+                    console.log("deleting app", props.app);
+                    (new Promise(r => heroku.delete('/apps/' + props.app).then(_ => r(), _ => r()))).then(_ => {            
+                        console.log("creating app", props.app)
                         heroku.post('/apps', {body: {
                             name: props.app,
                             region: "eu",
                             stack: "heroku-18"
                         }}).then(result => {
                             console.log("created app", result)
+                        }, err => {
+                            console.log("could not create app", err)
                         })
                     })
                 }
             }
         }, err => console.log(err))        
-    , err => console.log(err))
+    , err => console.log(err)))
 }
 
 pgen()
