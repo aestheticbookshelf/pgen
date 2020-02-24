@@ -5,35 +5,15 @@
         "gitHubUserMail": "aestheticbookshelf@gmail.com",
         "npmUser": "aestheticbookshelf"
     },
-    "packages": {
-        "confutils": {            
-            "description": "Configuration utils.",
-            "keywords": [
-                "configuration",
-                "utils"
-            ]
-        },
-        "fileutils": {            
-            "description": "File utils.",
-            "keywords": [
-                "file",
-                "utils"
-            ]
-        },
+    "packages": {        
         "minapp": {          
             "app": "abminapp",            
             "description": "Minimal application.",
+            "node": "\\node\\node",
             "firebase": true,
+            "oauth": true,
             "keywords": [
                 "minimal",
-                "application"
-            ]
-        },
-        "testapp": {          
-            "app": "abtestapp123",
-            "description": "Test application.",
-            "keywords": [
-                "test",
                 "application"
             ]
         }

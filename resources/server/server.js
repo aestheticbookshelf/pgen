@@ -11,6 +11,8 @@ app.use(express.static(__rootdirname))
 
 // firebase slot
 
+// oauth slot
+
 app.get('/', (req, res) => res.send(`
 <!DOCTYPE html>
 <html lang="en">

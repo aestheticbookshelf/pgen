@@ -108,10 +108,14 @@ node_modules
 }
 
 function createInstallBat(props){    
-    let ib = fu.readFile(path.join(__dirname, "s/install.bat"))
+    let ib = fu.readFile(path.join(__dirname, "s/install.bat")) + "\n"
 
     if(props.firebase){
-        ib += "\n\ncall npm install @aestheticbookshelf/confutils\n"
+        ib += "\ncall npm install @aestheticbookshelf/confutils\n"
+    }
+
+    if(props.oauth){
+        ib += "\ncall npm install @aestheticbookshelf/oauth\n"
     }
 
     return ib
@@ -128,6 +132,49 @@ const fa = cu.FirebaseAdmin({
     databaseURL: "https://pgneditor-1ab96.firebaseio.com/"
 })
 `)
+
+    if(props.oauth) s = s.replace("// oauth slot", `
+const oauth = require('@aestheticbookshelf/oauth')
+
+const firestore = ${props.firebase ? "fa.firestore" : "null"}
+
+const maxAge = 31 * 24 * 60 * 60 * 1000
+
+oauth.initOauth(app, firestore, maxAge)
+
+oauth.addLichessStrategy(app, {
+    tag: "lichess-common",
+    clientID: process.env.LICHESS_CLIENT_ID,
+    clientSecret: process.env.LICHESS_CLIENT_SECRET,
+    authURL: "/auth/lichess",
+    failureRedirect: "/?lichesslogin=failed",
+    okRedirect: "/?lichesslogin=ok"
+})
+
+oauth.addLichessStrategy(app, {
+    tag: "lichess-bot",
+    clientID: process.env.LICHESS_BOT_CLIENT_ID,
+    clientSecret: process.env.LICHESS_BOT_CLIENT_SECRET,
+    authURL: "/auth/lichess/bot",
+    scope: "challenge:read challenge:write bot:play",
+    failureRedirect: "/?lichessbotlogin=failed",
+    okRedirect: "/?lichessbotlogin=ok"
+})
+`)
+
+    return s
+}
+
+function createStartServerBat(props){
+    let node = props.node || "node"
+
+    let makeenv = props.firebase ? `call s\\makeenv.bat\n\n` : ""
+
+    let s = `
+${makeenv}
+
+start ${node} resources\\server\\server.js
+`
 
     return s
 }
@@ -148,15 +195,21 @@ function pgen(){
     }
     console.log("writing config")
     fu.writeFile(path.join(root, "config"), createConfig(props))       
-    console.log("removing git");        
-    (SKIP_GIT ? new Promise(r=>r()) : new Promise(r => octokit.repos.delete({
-        owner: props.gitHubUser,
-        repo: props.repo
-    }).then(_ => r(), _ => r())).then(_ => (SKIP_GIT ? new Promise(r=>r()) :                 
+    console.log("removing git")        
+
+    let p = SKIP_GIT ?
+        new Promise(r=>{console.log("skip remove git");r()})
+    :
+        new Promise(r => octokit.repos.delete({
+            owner: props.gitHubUser,
+            repo: props.repo
+        }).then(_ => {console.log("deleted repo");r()}, _ => {"could not delete repo";r()}))
+    
+    p.then(_ => (SKIP_GIT ? new Promise(r=>{console.log("skip create git");r()}) :                 
         octokit.repos.createForAuthenticatedUser({
             name: props.repo,
             description: props.description
-        })).then(_ => {            
+        })).then(_ => {                        
             execSync('git init', {
                 cwd: root
             })
@@ -175,8 +228,7 @@ function pgen(){
             if(props.app) fs.copyFileSync(path.join(sRootSrc, "ph.bat"), path.join(sRoot, "p.bat"))   
             else fs.copyFileSync(path.join(sRootSrc, "p.bat"), path.join(sRoot, "p.bat"))   
             if(props.app){
-                if(props.firebase) fs.copyFileSync(path.join(sRootSrc, "sfb.bat"), path.join(sRoot, "s.bat"))    
-                else fs.copyFileSync(path.join(sRootSrc, "s.bat"), path.join(sRoot, "s.bat"))    
+                fu.writeFile(path.join(sRoot, "s.bat"), createStartServerBat(props))   
                 fs.copyFileSync(path.join(sRootSrc, "dev.bat"), path.join(sRoot, "dev.bat"))   
                 fu.writeFile(path.join(sRoot, "install.bat"), createInstallBat(props))   
             }
@@ -218,7 +270,7 @@ function pgen(){
                 }
             }
         }, err => console.log(err))        
-    , err => console.log(err)))
+    , err => console.log(err))
 }
 
 pgen()
