@@ -1,4 +1,6 @@
-const { div } = require('@aestheticbookshelf/smartdom')
+const { Button, div } = require('@aestheticbookshelf/smartdom')
+
+const USER = PROPS.USER || {}
 
 let app = div().html("Minimal App")
 

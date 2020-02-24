@@ -25,6 +25,12 @@ app.get('/', (req, res) => res.send(`
         <link rel="icon" href="/resources/client/favicon.ico" />
 
         <link href="/resources/client/css/smartdom/style.css" rel="stylesheet" />
+
+        <script>
+        const PROPS = {
+            USER: ${JSON.stringify(req.user, null, 2)}
+        }
+        </script>
         
     </head>
 
