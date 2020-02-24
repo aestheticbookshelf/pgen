@@ -1,7 +1,13 @@
 const { div } = require('@aestheticbookshelf/smartdom')
 
-let app = div()
-    .w(200).h(200).pad(20).bc("#0f0")
-    .html("Minimal App")
+let app = div().html("Minimal App")
+
+/*
+let app = div().a(
+    Button("Login with lichess", () => document.location.href = "/auth/lichess"),
+    Button("Login with lichess-bot", () => document.location.href = "/auth/lichess/bot"),
+    div().html(`user id: ${USER.id}`)
+)    
+*/
 
 document.querySelector("#root").appendChild(app.e)
